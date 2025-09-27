@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { borrowerService } from "./borrower.service";
 import { parseError } from "../../utils/parseError";
 
-export const borrowerController = {
+export const BorrowerController = {
     async create(req: Request, res: Response, next: NextFunction) {
         try {
             const user = await borrowerService.createBorrower(req.body);

@@ -1,13 +1,13 @@
 import { Router } from "express";
-import { borrowerController } from "./borrower.controller";
+import { BorrowerController } from "./borrower.controller";
 
 const borrowerRouter = Router();
 
-borrowerRouter.post("/", borrowerController.create);
-borrowerRouter.get("/", borrowerController.getAll);
-borrowerRouter.get("/:id", borrowerController.getById);
-borrowerRouter.get("/creator/:creatorId", borrowerController.getByCreator);
-borrowerRouter.put("/:id", borrowerController.update);
-borrowerRouter.delete("/:id", borrowerController.delete);
+borrowerRouter.post("/", BorrowerController.create);
+borrowerRouter.get("/", BorrowerController.getAll);
+borrowerRouter.get("/:id", BorrowerController.getById);
+borrowerRouter.get("/creator/:creatorId", BorrowerController.getByCreator);
+borrowerRouter.put("/:id", BorrowerController.update);
+borrowerRouter.delete("/:id", BorrowerController.delete);
 
 export default borrowerRouter;

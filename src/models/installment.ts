@@ -16,3 +16,5 @@ const installmentSchema = new Schema(
 );
 
 const InstallmentModel = model('Installment', installmentSchema)
+
+export default InstallmentModel

@@ -6,17 +6,14 @@ const loanSchema = new Schema({
     totalAmount: { type: Number, required: true },
     currency: { type: String, required: true, default: "BDT" },
     disbursementDate: { type: Date, required: true }, // disbursement date
-    disbursementMethod: { type: String, enum: ["Cash", "Bkash", "Bank"], required: true },
-
+    disbursementMethod: { type: String, required: true },
     repaymentPlan: { type: String, enum: ["one_time", "installments"], required: true },
-
     oneTimePlan: {
         dueDate: { type: Date },
     },
-
     installmentPlan: {
         numberOfInstallments: { type: Number },
-        cycle: { type: String, enum: ["30days", "60days", "90days"] },
+        cycle: { type: String, },
         firstDueDate: { type: Date },
     }
 }, { timestamps: true });

@@ -9,14 +9,14 @@ import {
 import { authMiddleware } from "../../middlewares/auth.middleware";
 
 
-const router = express.Router();
+const loanRouter = express.Router();
 
-router.use(authMiddleware);
+loanRouter.use(authMiddleware);
 
-router.post("/", createLoan);
-router.get("/", getLoans);
-router.get("/:id", getLoanById);
-router.put("/:id", updateLoan);
-router.delete("/:id", deleteLoan);
+loanRouter.post("/", createLoan);
+loanRouter.get("/", getLoans);
+loanRouter.get("/:id", getLoanById);
+loanRouter.put("/:id", updateLoan);
+loanRouter.delete("/:id", deleteLoan);
 
-export default router;
+export default loanRouter;

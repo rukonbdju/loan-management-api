@@ -72,8 +72,8 @@ export const BorrowerController = {
     async delete(req: Request, res: Response, next: NextFunction) {
         try {
             const user = await BorrowerService.deleteBorrower(req.params.id);
-            if (!user) return res.status(404).json({ message: "Borrower not found" });
-            res.json({ message: "Borrower deleted successfully" });
+            if (!user) return res.status(404).json({ success: false, message: "Borrower not found" });
+            res.json({ success: true, message: "Borrower deleted successfully" });
         } catch (error) {
             const parsedError = parseError(error)
             next(parsedError);

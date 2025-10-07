@@ -1,9 +1,9 @@
 
 import BorrowerModel from "../../models/borrower";
-import { CreateBorrowerType, UpdateBorrowerType } from "./borrower.types";
+import { CreateBorrowerDTO, UpdateBorrowerDTO } from "./borrower.types";
 
-export const borrowerService = {
-    async createBorrower(data: CreateBorrowerType) {
+export const BorrowerService = {
+    async createBorrower(data: CreateBorrowerDTO) {
         const borrower = new BorrowerModel(data);
         return await borrower.save();
     },
@@ -19,8 +19,15 @@ export const borrowerService = {
     async getBorrowerById(id: string) {
         return await BorrowerModel.findById(id);
     },
+    async filterBorrowerByCreatorAndBorrowerId(borrowerId: string, creatorId: string) {
+        console.log({ creatorId, borrowerId })
+        return await BorrowerModel.findOne({
+            borrowerId: borrowerId,
+            createdBy: creatorId
+        })
+    },
 
-    async updateBorrower(id: string, data: UpdateBorrowerType) {
+    async updateBorrower(id: string, data: UpdateBorrowerDTO) {
         return await BorrowerModel.findByIdAndUpdate(id, data, { new: true });
     },
 

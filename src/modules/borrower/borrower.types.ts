@@ -1,18 +1,16 @@
 
-export interface CreateBorrowerType {
+export interface CreateBorrowerDTO {
     name: string;
     phone: string;
     mobile: string;
-    nid: string;
     createdBy: string;
     address: string;
 }
 
 
-export interface UpdateBorrowerType {
+export interface UpdateBorrowerDTO {
     name?: string;
     phone?: string;
     mobile?: string;
-    nid?: string;
     address?: string;
 }

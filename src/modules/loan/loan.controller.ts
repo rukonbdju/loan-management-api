@@ -27,7 +27,7 @@ export const createLoan = async (req: AuthRequest, res: Response, next: NextFunc
 
 export const getLoans = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-        const createdBy = req.params.id;
+        const createdBy = req.userId;
         if (!createdBy) {
             res.status(404).json({ success: false, message: "User not fount" })
             return;

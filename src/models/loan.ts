@@ -1,4 +1,5 @@
 import { model, Schema } from "mongoose";
+import PaymentModel from "./payment";
 
 const loanSchema = new Schema(
     {
@@ -13,6 +14,15 @@ const loanSchema = new Schema(
     },
     { timestamps: true }
 );
+
+// 🕵🏼 Cascade delete when a loan is deleted
+loanSchema.pre('findOneAndDelete', async function (next) {
+    const loan = await this.model.findOne(this.getFilter())
+    if (loan) {
+        await PaymentModel.deleteMany({ loan: loan._id })
+    }
+    next();
+})
 
 const LoanModel = model('Loan', loanSchema)
 export default LoanModel

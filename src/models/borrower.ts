@@ -1,5 +1,6 @@
 import { model, Schema } from "mongoose";
 import LoanModel from "./loan";
+import PaymentModel from "./payment";
 
 const borrowerSchema = new Schema(
     {
@@ -18,6 +19,7 @@ borrowerSchema.pre('findOneAndDelete', async function (next) {
     const borrower = await this.model.findOne(this.getFilter())
     if (borrower) {
         await LoanModel.deleteMany({ borrower: borrower._id })
+        await PaymentModel.deleteMany({ borrower: borrower._id })
     }
     next();
 })

@@ -88,6 +88,38 @@ export const LoanService = {
         return LoanModel.findOne({ loanId: loanId, createdBy: userId });
     },
 
+    filterByBorrowerId: async (borrowerId: string) => {
+        const _borrowerId = new mongoose.Types.ObjectId(borrowerId);
+        const loans = await LoanModel.aggregate([
+            { $match: { borrower: _borrowerId } },
+            { $sort: { createdAt: -1 } },
+            {
+                $lookup: {
+                    from: "payments",
+                    localField: "_id",
+                    foreignField: "loan",
+                    as: "payments"
+                }
+            },
+            {
+                $lookup: {
+                    from: "borrowers",
+                    localField: "borrower",
+                    foreignField: "_id",
+                    as: "borrower"
+                }
+            },
+            {
+                $unwind: {
+                    path: "$borrower",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+        ])
+        return loans;
+        //return LoanModel.find({ borrower: borrowerId }).populate('borrower');
+    },
+
     updateLoan: async (id: string, updateData: Partial<LoanInput>) => {
         return LoanModel.findOneAndUpdate({ _id: id }, updateData, { new: true });
     },

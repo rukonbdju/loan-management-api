@@ -50,6 +50,16 @@ export const getLoanById = async (req: AuthRequest, res: Response, next: NextFun
         next(parsedError);
     }
 };
+export const getLoansByBorrowerId = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const loans = await LoanService.filterByBorrowerId(req.params.id);
+        if (!loans) return res.status(404).json({ success: false, message: "Loan not found" });
+        res.json({ success: true, data: loans });
+    } catch (error) {
+        const parsedError = parseError(error)
+        next(parsedError);
+    }
+};
 
 export const updateLoan = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {

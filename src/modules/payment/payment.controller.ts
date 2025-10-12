@@ -18,6 +18,7 @@ const PaymentController = {
             next(parsedError)
         }
     },
+
     async filterByUserId(req: AuthRequest, res: Response, next: NextFunction) {
         try {
             const creatorId = req.userId;
@@ -25,12 +26,24 @@ const PaymentController = {
                 return res.status(401).json({ success: false, message: 'User ID is not found' })
             }
             const result = await PaymentService.filterByUserId(creatorId)
-            res.status(201).json({ success: true, data: result })
+            res.status(200).json({ success: true, data: result })
         } catch (error) {
             const parsedError = parseError(error)
             next(parsedError)
         }
     },
+
+    async filterByBorrowerId(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const id = req.params.id
+            const result = await PaymentService.filterByBorrowerId(id)
+            res.status(200).json({ success: true, data: result })
+        } catch (error) {
+            const parsedError = parseError(error)
+            next(parsedError)
+        }
+    },
+
     async update(req: Request, res: Response, next: NextFunction) {
         try {
             const id = req?.params?.id
@@ -38,12 +51,13 @@ const PaymentController = {
                 return res.status(404).json({ success: false, message: 'Item not found' })
             }
             const result = await PaymentService.update(id, req.body)
-            res.status(201).json({ success: true, data: result })
+            res.status(200).json({ success: true, data: result })
         } catch (error) {
             const parsedError = parseError(error)
             next(parsedError)
         }
     },
+
     async delete(req: Request, res: Response, next: NextFunction) {
         try {
             const id = req?.params?.id
@@ -51,7 +65,7 @@ const PaymentController = {
                 return res.status(404).json({ success: false, message: 'Item not found' })
             }
             const result = await PaymentService.delete(id)
-            res.status(201).json({ success: true, data: result })
+            res.status(200).json({ success: true, data: result })
         } catch (error) {
             const parsedError = parseError(error)
             next(parsedError)

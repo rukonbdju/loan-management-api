@@ -14,6 +14,9 @@ const PaymentService = {
     },
     async filterByUserId(userId: string) {
         return await PaymentModel.find({ createdBy: userId }).populate('borrower')
+    },
+    async filterByBorrowerId(borrowerId: string) {
+        return await PaymentModel.find({ borrower: borrowerId }).populate('loan')
     }
 }
 

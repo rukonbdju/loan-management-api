@@ -5,6 +5,7 @@ import {
     getLoanById,
     updateLoan,
     deleteLoan,
+    getLoansByBorrowerId,
 } from "../loan/loan.controller";
 import { authMiddleware } from "../../middlewares/auth.middleware";
 
@@ -15,6 +16,7 @@ loanRouter.use(authMiddleware);
 
 loanRouter.post("/", createLoan);
 loanRouter.get("/", getLoans);
+loanRouter.get("/borrower/:id", getLoansByBorrowerId);
 loanRouter.get("/:id", getLoanById);
 loanRouter.put("/:id", updateLoan);
 loanRouter.delete("/:id", deleteLoan);

@@ -8,6 +8,7 @@ paymentRouter.use(authMiddleware);
 //api routes
 paymentRouter.post('/', PaymentController.create)
 paymentRouter.get('/', PaymentController.filterByUserId)
+paymentRouter.get('/borrower/:id', PaymentController.filterByBorrowerId)
 paymentRouter.put('/:id', PaymentController.update)
 paymentRouter.delete('/:id', PaymentController.delete)
 

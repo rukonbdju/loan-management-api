@@ -50,6 +50,38 @@ export const getLoanById = async (req: AuthRequest, res: Response, next: NextFun
         next(parsedError);
     }
 };
+export const getLoanSummary = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const createdBy = req.userId;
+        if (!createdBy) {
+            res.status(404).json({ success: false, message: "User not fount" })
+            return;
+        }
+        const data = await LoanService.getLoanSummary(createdBy);
+        if (!data) return res.status(404).json({ success: false, message: "Loan not found" });
+        res.json({ success: true, data });
+    } catch (error) {
+        const parsedError = parseError(error)
+        next(parsedError);
+    }
+};
+
+export const getUpcomingPayments = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const createdBy = req.userId;
+        if (!createdBy) {
+            res.status(404).json({ success: false, message: "User not fount" })
+            return;
+        }
+        const data = await LoanService.getUpcomingPayments(createdBy);
+        if (!data) return res.status(404).json({ success: false, message: "Loan not found" });
+        res.json({ success: true, data });
+    } catch (error) {
+        const parsedError = parseError(error)
+        next(parsedError);
+    }
+};
+
 export const getLoansByBorrowerId = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
         const loans = await LoanService.filterByBorrowerId(req.params.id);
@@ -82,3 +114,5 @@ export const deleteLoan = async (req: AuthRequest, res: Response, next: NextFunc
         next(parsedError);
     }
 };
+
+

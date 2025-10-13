@@ -127,4 +127,160 @@ export const LoanService = {
     deleteLoan: async (id: string, userId: string) => {
         return LoanModel.findOneAndDelete({ _id: id });
     },
+
+    getLoanSummary: async (createdBy: string) => {
+        const userId = new mongoose.Types.ObjectId(createdBy);
+        console.log({ userId, createdBy })
+
+        const stats = await LoanModel.aggregate([
+            { $match: { createdBy: userId } },
+
+            // Lookup payments for each loan
+            {
+                $lookup: {
+                    from: "payments",
+                    localField: "_id",
+                    foreignField: "loan",
+                    as: "payments",
+                },
+            },
+
+            // Calculate totalPaid for each loan
+            {
+                $addFields: {
+                    totalPaid: { $sum: "$payments.paymentAmount" },
+                },
+            },
+
+            // Classify loans
+            {
+                $addFields: {
+                    isActive: {
+                        $and: [
+                            { $lt: ["$totalPaid", "$amount"] },
+                            { $gte: ["$dueDate", new Date()] },
+                        ],
+                    },
+                    isOverdue: {
+                        $and: [
+                            { $lt: ["$totalPaid", "$amount"] },
+                            { $lt: ["$dueDate", new Date()] },
+                        ],
+                    },
+                },
+            },
+
+            // Group to calculate stats
+            {
+                $group: {
+                    _id: null,
+                    totalLoanAmount: { $sum: "$amount" },
+                    activeLoans: {
+                        $sum: { $cond: ["$isActive", 1, 0] },
+                    },
+                    overdueLoans: {
+                        $sum: { $cond: ["$isOverdue", 1, 0] },
+                    },
+                    totalPaymentAmount: { $sum: "$totalPaid" },
+                },
+            },
+        ]);
+
+        return stats[0] || {
+            totalLoanAmount: 0,
+            activeLoans: 0,
+            overdueLoans: 0,
+            totalPaymentAmount: 0,
+        };
+    },
+    getUpcomingPayments: async (createdBy: string) => {
+        const userId = new mongoose.Types.ObjectId(createdBy)
+
+        const loans = await LoanModel.aggregate([
+            // Filter by user
+            { $match: { createdBy: userId } },
+
+            // Lookup borrower info
+            {
+                $lookup: {
+                    from: "borrowers",
+                    localField: "borrower",
+                    foreignField: "_id",
+                    as: "borrower",
+                },
+            },
+            { $unwind: "$borrower" },
+
+            // Lookup payments for each loan
+            {
+                $lookup: {
+                    from: "payments",
+                    localField: "_id",
+                    foreignField: "loan",
+                    as: "payments",
+                },
+            },
+
+            // Calculate total paid
+            {
+                $addFields: {
+                    totalPaid: { $sum: "$payments.paymentAmount" },
+                },
+            },
+
+            // Add calculated status
+            {
+                $addFields: {
+                    status: {
+                        $switch: {
+                            branches: [
+                                {
+                                    case: { $gte: ["$totalPaid", "$amount"] },
+                                    then: "Paid",
+                                },
+                                {
+                                    case: {
+                                        $and: [
+                                            { $lt: ["$totalPaid", "$amount"] },
+                                            { $gte: ["$dueDate", new Date()] },
+                                            { $gt: ["$totalPaid", 0] },
+                                        ],
+                                    },
+                                    then: "Active",
+                                },
+                                {
+                                    case: {
+                                        $and: [
+                                            { $lt: ["$totalPaid", "$amount"] },
+                                            { $lt: ["$dueDate", new Date()] },
+                                        ],
+                                    },
+                                    then: "Overdue",
+                                },
+                            ],
+                            default: "Unpaid",
+                        },
+                    },
+                },
+            },
+
+            // Project final output
+            {
+                $project: {
+                    _id: 0,
+                    borrower: "$borrower.name",
+                    borrowerId: "$borrower.borrowerId",
+                    dueDate: 1,
+                    amount: 1,
+                    status: 1,
+                },
+            },
+
+            // Limit to 10 results
+            { $limit: 10 },
+        ]);
+
+        return loans;
+    }
+
 };

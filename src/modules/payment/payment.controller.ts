@@ -25,7 +25,7 @@ const PaymentController = {
             if (!creatorId) {
                 return res.status(401).json({ success: false, message: 'User ID is not found' })
             }
-            const result = await PaymentService.filterByUserId(creatorId)
+            const result = await PaymentService.getPaymentHistory({ createdBy: creatorId })
             res.status(200).json({ success: true, data: result })
         } catch (error) {
             const parsedError = parseError(error)

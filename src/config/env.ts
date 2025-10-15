@@ -12,4 +12,5 @@ export const ENV = {
     MONGO_URI: getEnv("MONGO_URI"),
     JWT_SECRET: getEnv("JWT_SECRET"),
     JWT_EXPIRES_IN: getEnv("JWT_EXPIRES_IN"),
+    MODE: getEnv("MODE")
 };

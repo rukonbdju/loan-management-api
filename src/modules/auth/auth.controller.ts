@@ -4,6 +4,7 @@ import { AuthService } from "./auth.service";
 import { comparePassword } from "./auth.utils";
 import { AuthRequest } from "../../middlewares/auth.middleware";
 import { parseError } from "../../utils/parseError";
+import { ENV } from "../../config/env";
 
 export const AuthController = {
     //user register
@@ -15,15 +16,15 @@ export const AuthController = {
             console.log({ accessToken, refreshToken })
             res.cookie('accessToken', accessToken, {
                 httpOnly: true,
-                secure: false,
-                sameSite: 'lax',
+                secure: ENV.MODE === "dev" ? false : true,
+                sameSite: 'none',
                 maxAge: 24 * 60 * 60 * 1000,
             });
 
             res.cookie('refreshToken', refreshToken, {
                 httpOnly: true,
-                secure: false,
-                sameSite: 'lax',
+                secure: ENV.MODE === "dev" ? false : true,
+                sameSite: 'none',
                 maxAge: 7 * 24 * 60 * 60 * 1000,
             });
             res.status(201).json({ success: true, data: result })
@@ -55,15 +56,15 @@ export const AuthController = {
             console.log({ accessToken, refreshToken })
             res.cookie('accessToken', accessToken, {
                 httpOnly: true,
-                secure: false,
-                sameSite: 'lax',
+                secure: ENV.MODE === "dev" ? false : true,
+                sameSite: 'none',
                 maxAge: 24 * 60 * 60 * 1000,
             });
 
             res.cookie('refreshToken', refreshToken, {
                 httpOnly: true,
-                secure: false,
-                sameSite: 'lax',
+                secure: ENV.MODE === "dev" ? false : true,
+                sameSite: 'none',
                 maxAge: 7 * 24 * 60 * 60 * 1000,
             });
             res.status(200).json({ success: true, data: user });
@@ -94,15 +95,15 @@ export const AuthController = {
     logout: async (req: Request, res: Response, next: NextFunction) => {
         res.cookie('accessToken', '', {
             httpOnly: true,
-            secure: false,
-            sameSite: 'lax',
+            secure: ENV.MODE === "dev" ? false : true,
+            sameSite: 'none',
             maxAge: 24 * 60 * 60 * 1000,
         });
 
         res.cookie('refreshToken', '', {
             httpOnly: true,
-            secure: false,
-            sameSite: 'lax',
+            secure: ENV.MODE === "dev" ? false : true,
+            sameSite: 'none',
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
         res.status(200).json({ success: true, data: null });

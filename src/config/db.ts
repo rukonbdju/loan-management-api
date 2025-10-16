@@ -3,6 +3,10 @@ import logger from "../utils/logger";
 import { ENV } from "./env";
 
 export const connectDB = async () => {
+    if (!ENV.MONGO_URI) {
+        console.log("DB URL not fount!")
+        return;
+    }
     logger.info("MONGO_URL", ENV.MONGO_URI)
     try {
         await mongoose.connect(ENV.MONGO_URI);

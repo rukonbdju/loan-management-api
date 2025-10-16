@@ -8,7 +8,7 @@ const getEnv = (key: string): string => {
 };
 
 export const ENV = {
-    PORT: parseInt(getEnv("PORT")),
+    PORT: getEnv("PORT"),
     MONGO_URI: getEnv("MONGO_URI"),
     JWT_SECRET: getEnv("JWT_SECRET"),
     JWT_EXPIRES_IN: getEnv("JWT_EXPIRES_IN"),

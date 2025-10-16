@@ -3,6 +3,7 @@ import logger from "../utils/logger";
 import { ENV } from "./env";
 
 export const connectDB = async () => {
+    console.log("URI: ", ENV.MONGO_URI)
     if (!ENV.MONGO_URI) {
         console.log("DB URL not fount!")
         return;

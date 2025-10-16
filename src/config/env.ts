@@ -14,4 +14,3 @@ export const ENV = {
     JWT_EXPIRES_IN: getEnv("JWT_EXPIRES_IN"),
     MODE: getEnv("MODE")
 };
-console.log(ENV)

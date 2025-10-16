@@ -16,10 +16,7 @@ app.use(express.json());
 // Middlewares
 app.use(
     cors({
-        origin: (origin, callback) => {
-            if (!origin) return callback(null, true);
-            return callback(null, origin);
-        },
+        origin: ["http://localhost:3000", "https://interest-free-loan-portal.vercel.app"],
         credentials: true,
     })
 );

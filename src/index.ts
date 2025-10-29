@@ -18,8 +18,8 @@ app.use(
     cors({
         origin: (origin, callback) => {
             const allowed = [
-                "http://loanapi.assuffah.org",
-                "https://loanapi.assuffah.org",
+                "http://loan.assuffah.org",
+                "https://loan.assuffah.org",
                 "http://localhost:3000",
                 "https://interest-free-loan-portal.vercel.app"
             ];

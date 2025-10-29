@@ -17,7 +17,12 @@ app.use(express.json());
 app.use(
     cors({
         origin: (origin, callback) => {
-            const allowed = ["http://localhost:3000", "https://interest-free-loan-portal.vercel.app"];
+            const allowed = [
+                "http://loanapi.assuffah.org",
+                "https://loanapi.assuffah.org",
+                "http://localhost:3000",
+                "https://interest-free-loan-portal.vercel.app"
+            ];
             if (!origin || allowed.includes(origin)) {
                 callback(null, true);
             } else {

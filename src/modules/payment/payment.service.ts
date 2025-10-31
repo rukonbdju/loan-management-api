@@ -8,9 +8,6 @@ interface PaginationParams {
     limit?: number;
 }
 
-
-
-
 const PaymentService = {
     create: async (data: CreatePaymentDTO) => {
         const newPayment = new PaymentModel(data)

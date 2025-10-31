@@ -22,10 +22,12 @@ const PaymentController = {
     async filterByUserId(req: AuthRequest, res: Response, next: NextFunction) {
         try {
             const creatorId = req.userId;
+            const limit = req.query.limit ? Number(req.query.limit) : 10;
+            const page = req.query.page ? Number(req.query.page) : 1;
             if (!creatorId) {
                 return res.status(401).json({ success: false, message: 'User ID is not found' })
             }
-            const result = await PaymentService.getPaymentHistory({ createdBy: creatorId })
+            const result = await PaymentService.getPaymentHistory({ createdBy: creatorId, limit, page })
             res.status(200).json({ success: true, data: result })
         } catch (error) {
             const parsedError = parseError(error)

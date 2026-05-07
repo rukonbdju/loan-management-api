@@ -31,4 +31,21 @@ export const UserService = {
     async findUserByEmail(email: string) {
         return await UserModel.findOne({ email }).select('+password')
     },
+
+    async upsertGoogleUser(googleData: { googleId: string, email: string, name: string }) {
+        let user = await UserModel.findOne({ email: googleData.email });
+        if (user) {
+            user.googleId = googleData.googleId;
+            user.name = googleData.name; // Optional: update name from Google
+            await user.save();
+        } else {
+            user = new UserModel({
+                email: googleData.email,
+                name: googleData.name,
+                googleId: googleData.googleId,
+            });
+            await user.save();
+        }
+        return user;
+    }
 };

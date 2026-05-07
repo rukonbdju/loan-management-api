@@ -35,10 +35,10 @@ const PaymentController = {
         }
     },
 
-    async filterByBorrowerId(req: AuthRequest, res: Response, next: NextFunction) {
+    async filterByContactId(req: AuthRequest, res: Response, next: NextFunction) {
         try {
             const id = req.params.id
-            const result = await PaymentService.filterByBorrowerId(id)
+            const result = await PaymentService.filterByContactId(id)
             res.status(200).json({ success: true, data: result })
         } catch (error) {
             const parsedError = parseError(error)
@@ -74,6 +74,5 @@ const PaymentController = {
         }
     }
 }
-
 
 export default PaymentController;

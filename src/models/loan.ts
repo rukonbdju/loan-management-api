@@ -3,11 +3,13 @@ import PaymentModel from "./payment";
 
 const loanSchema = new Schema(
     {
-        loanId: { type: String, required: true },
+        loanId: { type: String, unique: true }, // Auto-generated
         createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
-        borrower: { type: Schema.Types.ObjectId, ref: "Borrower", required: true },
+        contact: { type: Schema.Types.ObjectId, ref: "Contact", required: true },
         amount: { type: Number, required: true },
         currency: { type: String, required: true, default: "BDT" },
+        loanType: { type: String, enum: ['one-time', 'installment'], default: 'one-time', required: true },
+        installments: { type: Number, default: 1 },
         disbursementDate: { type: Date, required: true },
         disbursementMethod: { type: String, required: true },
         dueDate: { type: Date, required: true },

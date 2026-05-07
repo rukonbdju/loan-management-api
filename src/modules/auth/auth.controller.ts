@@ -48,7 +48,7 @@ export const AuthController = {
             if (!user) {
                 return res.status(404).json({ success: false, message: 'User not found' })
             }
-            const isMatch = await comparePassword(password, user.password)
+            const isMatch = await comparePassword(password, user.password as string)
             if (!isMatch) {
                 return res.status(403).json({ success: false, message: 'Invalid password' })
             }
@@ -107,5 +107,69 @@ export const AuthController = {
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
         res.status(200).json({ success: true, data: null });
+    },
+
+    googleCallback: async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { code } = req.query;
+            if (!code) {
+                return res.redirect(`${ENV.CLIENT_URL}/login?error=no_code`);
+            }
+
+            const googleUser = await AuthService.getGoogleUserInfo(code as string);
+            const user = await UserService.upsertGoogleUser({
+                googleId: googleUser.googleId,
+                email: googleUser.email,
+                name: googleUser.name
+            });
+
+            const { accessToken, refreshToken } = AuthService.generateToken({ userId: user.id });
+
+            res.cookie('accessToken', accessToken, {
+                httpOnly: true,
+                secure: ENV.MODE === "dev" ? false : true,
+                sameSite: 'none',
+                maxAge: 24 * 60 * 60 * 1000,
+            });
+
+            res.cookie('refreshToken', refreshToken, {
+                httpOnly: true,
+                secure: ENV.MODE === "dev" ? false : true,
+                sameSite: 'none',
+                maxAge: 7 * 24 * 60 * 60 * 1000,
+            });
+
+            // If user is missing basic info, redirect to complete-profile
+            if (!user.phone || !user.address) {
+                return res.redirect(`${ENV.CLIENT_URL}/complete-profile`);
+            }
+
+            res.redirect(`${ENV.CLIENT_URL}/`);
+        } catch (error) {
+            console.error("Google Auth Error:", error);
+            res.redirect(`${ENV.CLIENT_URL}/login?error=auth_failed`);
+        }
+    },
+
+    updateProfile: async (req: AuthRequest, res: Response, next: NextFunction) => {
+        try {
+            const userId = req.userId;
+            const { phone, address } = req.body;
+
+            if (!userId) {
+                return res.status(401).json({ success: false, message: "Not authenticated" });
+            }
+
+            const updatedUser = await UserService.updateUser(userId, { phone, address });
+
+            res.status(200).json({
+                success: true,
+                message: "Profile updated successfully",
+                data: updatedUser
+            });
+        } catch (error) {
+            const parsedError = parseError(error);
+            next(parsedError);
+        }
     },
 }

@@ -4,8 +4,9 @@ const UserSchema = new Schema(
     {
         name: { type: String, required: true, },
         email: { type: String, required: true, unique: true },
-        phone: { type: String, required: true },
-        password: { type: String, required: true, select: false },
+        phone: { type: String },
+        password: { type: String, select: false },
+        googleId: { type: String },
         address: { type: String },
     },
     { timestamps: true }

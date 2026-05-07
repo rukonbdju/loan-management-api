@@ -4,7 +4,16 @@ import { LoanInput } from "./loan.types";
 
 export const LoanService = {
     createLoan: async (loanData: LoanInput) => {
-        const loan = new LoanModel(loanData);
+        // Auto-generate loanId
+        const count = await LoanModel.countDocuments();
+        const year = new Date().getFullYear();
+        const sequence = (count + 1).toString().padStart(4, '0');
+        const generatedId = `L-${year}-${sequence}`;
+        
+        const loan = new LoanModel({
+            ...loanData,
+            loanId: generatedId
+        });
         const newLoan = await loan.save();
         return newLoan;
     },
@@ -18,10 +27,10 @@ export const LoanService = {
             },
             {
                 $lookup: {
-                    from: "borrowers",
-                    localField: "borrower",
+                    from: "contacts",
+                    localField: "contact",
                     foreignField: "_id",
-                    as: "borrower"
+                    as: "contact"
                 }
             },
             {
@@ -34,7 +43,7 @@ export const LoanService = {
             },
             {
                 $unwind: {
-                    path: "$borrower",
+                    path: "$contact",
                     preserveNullAndEmptyArrays: true
                 }
             }
@@ -43,16 +52,12 @@ export const LoanService = {
         return loan[0];
     },
 
-    getLoansByUser: async (userId: string) => {
+    getLoansByUser: async (userId: string, search?: string, status?: string) => {
         const _userId = new mongoose.Types.ObjectId(userId);
+        const now = new Date();
 
-        const page = 1;
-        const limit = 10;
-        const skip = (page - 1) * limit;
-
-        const loans = await LoanModel.aggregate([
+        const pipeline: any[] = [
             { $match: { createdBy: _userId } },
-            { $sort: { createdAt: -1 } },
             {
                 $lookup: {
                     from: "payments",
@@ -63,35 +68,79 @@ export const LoanService = {
             },
             {
                 $lookup: {
-                    from: "borrowers",
-                    localField: "borrower",
+                    from: "contacts",
+                    localField: "contact",
                     foreignField: "_id",
-                    as: "borrower"
+                    as: "contact"
                 }
             },
             {
                 $unwind: {
-                    path: "$borrower",
+                    path: "$contact",
                     preserveNullAndEmptyArrays: true
                 }
             },
+            {
+                $addFields: {
+                    totalPaid: { $sum: "$payments.paymentAmount" },
+                }
+            }
+        ];
 
-            { $skip: skip },
-            { $limit: limit }
-        ])
+        // Apply Search Filter
+        if (search) {
+            pipeline.push({
+                $match: {
+                    $or: [
+                        { loanId: { $regex: search, $options: 'i' } },
+                        { "contact.name": { $regex: search, $options: 'i' } },
+                        { "contact.contactId": { $regex: search, $options: 'i' } }
+                    ]
+                }
+            });
+        }
+
+        // Apply Status Filter
+        if (status && status !== 'All') {
+            if (status === 'Paid') {
+                pipeline.push({ $match: { $expr: { $gte: ["$totalPaid", "$amount"] } } });
+            } else if (status === 'Active') {
+                pipeline.push({
+                    $match: {
+                        $and: [
+                            { $expr: { $lt: ["$totalPaid", "$amount"] } },
+                            { dueDate: { $gte: now } }
+                        ]
+                    }
+                });
+            } else if (status === 'Overdue') {
+                pipeline.push({
+                    $match: {
+                        $and: [
+                            { $expr: { $lt: ["$totalPaid", "$amount"] } },
+                            { dueDate: { $lt: now } }
+                        ]
+                    }
+                });
+            }
+        }
+
+        pipeline.push({ $sort: { createdAt: -1 } });
+        // pipeline.push({ $skip: skip });
+        // pipeline.push({ $limit: limit });
+
+        const loans = await LoanModel.aggregate(pipeline);
         return loans;
-
-        //return LoanModel.find({ createdBy: userId }).populate('borrower');
     },
 
     getLoanByLoanId: async (loanId: string, userId: string) => {
         return LoanModel.findOne({ loanId: loanId, createdBy: userId });
     },
 
-    filterByBorrowerId: async (borrowerId: string) => {
-        const _borrowerId = new mongoose.Types.ObjectId(borrowerId);
+    filterByContactId: async (contactId: string) => {
+        const _contactId = new mongoose.Types.ObjectId(contactId);
         const loans = await LoanModel.aggregate([
-            { $match: { borrower: _borrowerId } },
+            { $match: { contact: _contactId } },
             { $sort: { createdAt: -1 } },
             {
                 $lookup: {
@@ -103,21 +152,20 @@ export const LoanService = {
             },
             {
                 $lookup: {
-                    from: "borrowers",
-                    localField: "borrower",
+                    from: "contacts",
+                    localField: "contact",
                     foreignField: "_id",
-                    as: "borrower"
+                    as: "contact"
                 }
             },
             {
                 $unwind: {
-                    path: "$borrower",
+                    path: "$contact",
                     preserveNullAndEmptyArrays: true
                 }
             },
         ])
         return loans;
-        //return LoanModel.find({ borrower: borrowerId }).populate('borrower');
     },
 
     updateLoan: async (id: string, updateData: Partial<LoanInput>) => {
@@ -130,12 +178,10 @@ export const LoanService = {
 
     getLoanSummary: async (createdBy: string) => {
         const userId = new mongoose.Types.ObjectId(createdBy);
-        console.log({ userId, createdBy })
 
         const stats = await LoanModel.aggregate([
             { $match: { createdBy: userId } },
 
-            // Lookup payments for each loan
             {
                 $lookup: {
                     from: "payments",
@@ -145,14 +191,12 @@ export const LoanService = {
                 },
             },
 
-            // Calculate totalPaid for each loan
             {
                 $addFields: {
                     totalPaid: { $sum: "$payments.paymentAmount" },
                 },
             },
 
-            // Classify loans
             {
                 $addFields: {
                     isActive: {
@@ -170,7 +214,6 @@ export const LoanService = {
                 },
             },
 
-            // Group to calculate stats
             {
                 $group: {
                     _id: null,
@@ -197,21 +240,18 @@ export const LoanService = {
         const userId = new mongoose.Types.ObjectId(createdBy)
 
         const loans = await LoanModel.aggregate([
-            // Filter by user
             { $match: { createdBy: userId } },
 
-            // Lookup borrower info
             {
                 $lookup: {
-                    from: "borrowers",
-                    localField: "borrower",
+                    from: "contacts",
+                    localField: "contact",
                     foreignField: "_id",
-                    as: "borrower",
+                    as: "contact",
                 },
             },
-            { $unwind: "$borrower" },
+            { $unwind: "$contact" },
 
-            // Lookup payments for each loan
             {
                 $lookup: {
                     from: "payments",
@@ -221,14 +261,12 @@ export const LoanService = {
                 },
             },
 
-            // Calculate total paid
             {
                 $addFields: {
                     totalPaid: { $sum: "$payments.paymentAmount" },
                 },
             },
 
-            // Add calculated status
             {
                 $addFields: {
                     status: {
@@ -264,23 +302,20 @@ export const LoanService = {
                 },
             },
 
-            // Project final output
             {
                 $project: {
                     _id: 0,
-                    borrower: "$borrower.name",
-                    borrowerId: "$borrower.borrowerId",
+                    contact: "$contact.name",
+                    contactId: "$contact.contactId",
                     dueDate: 1,
                     amount: 1,
                     status: 1,
                 },
             },
 
-            // Limit to 10 results
             { $limit: 10 },
         ]);
 
         return loans;
     }
-
 };

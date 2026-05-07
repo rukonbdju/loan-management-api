@@ -23,33 +23,30 @@ const PaymentService = {
     },
 
     filterByUserId: async (userId: string) => {
-        return await PaymentModel.find({ createdBy: userId }).populate('borrower')
+        return await PaymentModel.find({ createdBy: userId }).populate('contact')
     },
 
-    filterByBorrowerId: async (borrowerId: string) => {
-        return await PaymentModel.find({ borrower: borrowerId }).populate('loan')
+    filterByContactId: async (contactId: string) => {
+        return await PaymentModel.find({ contact: contactId }).populate('loan')
     },
 
     getPaymentHistory: async ({ createdBy, page = 1, limit = 10, }: PaginationParams) => {
         const userId = new mongoose.Types.ObjectId(createdBy)
         const skip = (page - 1) * limit;
 
-        // Aggregation pipeline
         const payments = await PaymentModel.aggregate([
             { $match: { createdBy: userId } },
 
-            // Lookup borrower info
             {
                 $lookup: {
-                    from: "borrowers",
-                    localField: "borrower",
+                    from: "contacts",
+                    localField: "contact",
                     foreignField: "_id",
-                    as: "borrower",
+                    as: "contact",
                 },
             },
-            { $unwind: "$borrower" },
+            { $unwind: "$contact" },
 
-            // Lookup loan info
             {
                 $lookup: {
                     from: "loans",
@@ -60,12 +57,11 @@ const PaymentService = {
             },
             { $unwind: "$loan" },
 
-            // Project final fields
             {
                 $project: {
                     _id: 0,
-                    borrower: "$borrower.name",
-                    borrowerId: "$borrower.borrowerId",
+                    contact: "$contact.name",
+                    contactId: "$contact.contactId",
                     loanId: "$loan.loanId",
                     loanAmount: "$loan.amount",
                     paymentAmount: 1,
@@ -74,15 +70,12 @@ const PaymentService = {
                 },
             },
 
-            // Sort by latest payment
             { $sort: { paymentDate: -1 } },
 
-            // Pagination
             { $skip: skip },
             { $limit: limit },
         ]);
 
-        // Get total count for pagination
         const totalCount = await PaymentModel.countDocuments({ createdBy: userId });
 
         return {

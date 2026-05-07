@@ -5,12 +5,11 @@ import {
     getLoanById,
     updateLoan,
     deleteLoan,
-    getLoansByBorrowerId,
+    getLoansByContactId,
     getLoanSummary,
     getUpcomingPayments,
 } from "../loan/loan.controller";
 import { authMiddleware } from "../../middlewares/auth.middleware";
-
 
 const loanRouter = express.Router();
 
@@ -20,7 +19,7 @@ loanRouter.post("/", createLoan);
 loanRouter.get("/", getLoans);
 loanRouter.get("/summary", getLoanSummary);
 loanRouter.get("/upcoming-payments", getUpcomingPayments);
-loanRouter.get("/borrower/:id", getLoansByBorrowerId);
+loanRouter.get("/contact/:id", getLoansByContactId);
 loanRouter.get("/:id", getLoanById);
 loanRouter.put("/:id", updateLoan);
 loanRouter.delete("/:id", deleteLoan);

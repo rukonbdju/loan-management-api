@@ -1,5 +1,4 @@
-
-export interface CreateBorrowerDTO {
+export interface CreateContactDTO {
     name: string;
     phone: string;
     mobile: string;
@@ -7,8 +6,7 @@ export interface CreateBorrowerDTO {
     address: string;
 }
 
-
-export interface UpdateBorrowerDTO {
+export interface UpdateContactDTO {
     name?: string;
     phone?: string;
     mobile?: string;

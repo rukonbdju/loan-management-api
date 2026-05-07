@@ -3,12 +3,14 @@ import PaymentController from "./payment.controller";
 import { authMiddleware } from "../../middlewares/auth.middleware";
 
 const paymentRouter = Router();
-//auth middleware 
+
+// auth middleware 
 paymentRouter.use(authMiddleware);
-//api routes
+
+// api routes
 paymentRouter.post('/', PaymentController.create)
 paymentRouter.get('/', PaymentController.filterByUserId)
-paymentRouter.get('/borrower/:id', PaymentController.filterByBorrowerId)
+paymentRouter.get('/contact/:id', PaymentController.filterByContactId)
 paymentRouter.put('/:id', PaymentController.update)
 paymentRouter.delete('/:id', PaymentController.delete)
 

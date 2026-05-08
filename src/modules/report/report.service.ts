@@ -26,62 +26,76 @@ export const ReportService = {
 
         const income = transactions.find(t => t._id === 'income')?.total || 0;
         const expense = transactions.find(t => t._id === 'expense')?.total || 0;
+        const donation = transactions.find(t => t._id === 'donation')?.total || 0;
 
         // Loan aggregations
         const loanQuery: any = { createdBy: _userId };
-        if (startDate || endDate) {
-            loanQuery.disbursementDate = {};
-            if (startDate) loanQuery.disbursementDate.$gte = startDate;
-            if (endDate) loanQuery.disbursementDate.$lte = endDate;
-        }
-
-        const loans = await LoanModel.aggregate([
-            { $match: loanQuery },
-            {
-                $group: {
-                    _id: null,
-                    totalDisbursed: { $sum: "$amount" },
-                    count: { $sum: 1 }
-                }
-            }
-        ]);
-
-        const payments = await PaymentModel.aggregate([
-            { 
-                $match: { 
-                    paymentDate: { 
-                        $gte: startDate || new Date(0), 
-                        $lte: endDate || new Date() 
-                    } 
-                } 
-            },
+        // We don't filter loan stats by date for the main dashboard usually, 
+        // but if dates are provided, we should respect them for "Total Lent" 
+        // while "Active" and "Overdue" are current status.
+        
+        const loansStats = await LoanModel.aggregate([
+            { $match: { createdBy: _userId } },
             {
                 $lookup: {
-                    from: "loans",
-                    localField: "loan",
-                    foreignField: "_id",
-                    as: "loanData"
-                }
+                    from: "payments",
+                    localField: "_id",
+                    foreignField: "loan",
+                    as: "payments",
+                },
             },
-            { $unwind: "$loanData" },
-            { $match: { "loanData.createdBy": _userId } },
+            {
+                $addFields: {
+                    totalPaid: { $sum: "$payments.paymentAmount" },
+                },
+            },
+            {
+                $addFields: {
+                    isActive: {
+                        $and: [
+                            { $lt: ["$totalPaid", "$amount"] },
+                            { $gte: ["$dueDate", new Date()] },
+                        ],
+                    },
+                    isOverdue: {
+                        $and: [
+                            { $lt: ["$totalPaid", "$amount"] },
+                            { $lt: ["$dueDate", new Date()] },
+                        ],
+                    },
+                },
+            },
             {
                 $group: {
                     _id: null,
-                    totalCollected: { $sum: "$paymentAmount" }
-                }
-            }
+                    totalLent: { $sum: "$amount" },
+                    activeLoans: { $sum: { $cond: ["$isActive", 1, 0] } },
+                    overdueLoans: { $sum: { $cond: ["$isOverdue", 1, 0] } },
+                    totalCollected: { $sum: "$totalPaid" },
+                },
+            },
         ]);
 
-        return {
-            income,
-            expense,
-            netCashFlow: income - expense,
-            totalDisbursed: loans[0]?.totalDisbursed || 0,
-            totalCollected: payments[0]?.totalCollected || 0,
-            loanCount: loans[0]?.count || 0
+        const stats = loansStats[0] || {
+            totalLent: 0,
+            activeLoans: 0,
+            overdueLoans: 0,
+            totalCollected: 0,
         };
+
+        return {
+            totalIncome: income,
+            totalExpense: expense,
+            balance: income - expense - donation,
+            totalLent: stats.totalLent,
+            activeLoans: stats.activeLoans,
+            overdueLoans: stats.overdueLoans,
+            totalCollected: stats.totalCollected,
+            totalDonation: donation
+        };
+
     },
+
 
     getLoanStatusDistribution: async (userId: string) => {
         const _userId = new mongoose.Types.ObjectId(userId);
